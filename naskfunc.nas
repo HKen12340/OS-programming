@@ -1,12 +1,15 @@
 ; naskfunc
 ; TAB=4
 
-[FORMAT "WCOFF"]				; ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆãƒ•ã‚¡ã‚¤ãƒ«ã‚’ä½œã‚‹ãƒ¢ãƒ¼ãƒ‰	
-[INSTRSET "i486p"]				; 486ã®å‘½ä»¤ã¾ã§ä½¿ã„ãŸã„ã¨ã„ã†è¨˜è¿°
-[BITS 32]						; 32ãƒ“ãƒƒãƒˆãƒ¢ãƒ¼ãƒ‰ç”¨ã®æ©Ÿæ¢°èªã‚’ä½œã‚‰ã›ã‚‹
-[FILE "naskfunc.nas"]			; ã‚½ãƒ¼ã‚¹ãƒ•ã‚¡ã‚¤ãƒ«åæƒ…å ±
+[FORMAT "WCOFF"]				; ƒIƒuƒWƒFƒNƒgƒtƒ@ƒCƒ‹‚ğì‚éƒ‚[ƒh	
+[INSTRSET "i486p"]				; 486‚Ì–½—ß‚Ü‚Åg‚¢‚½‚¢‚Æ‚¢‚¤‹Lq
+[BITS 32]						; 32ƒrƒbƒgƒ‚[ƒh—p‚Ì‹@ŠBŒê‚ğì‚ç‚¹‚é
+[FILE "naskfunc.nas"]			; ƒ\[ƒXƒtƒ@ƒCƒ‹–¼î•ñ
 
-		GLOBAL	_io_hlt,_write_mem8
+		GLOBAL	_io_hlt, _io_cli, _io_sti, _io_stihlt
+		GLOBAL	_io_in8,  _io_in16,  _io_in32
+		GLOBAL	_io_out8, _io_out16, _io_out32
+		GLOBAL	_io_load_eflags, _io_store_eflags
 
 [SECTION .text]
 
@@ -14,8 +17,61 @@ _io_hlt:	; void io_hlt(void);
 		HLT
 		RET
 
-_write_mem8:	; void write_mem8(int addr, int data);
-		MOV		ECX,[ESP+4]		; [ESP+4]ã«addrãŒå…¥ã£ã¦ã„ã‚‹ã®ã§ãã‚Œã‚’ECXã«èª­ã¿è¾¼ã‚€
-		MOV		AL,[ESP+8]		; [ESP+8]ã«dataãŒå…¥ã£ã¦ã„ã‚‹ã®ã§ãã‚Œã‚’ALã«èª­ã¿è¾¼ã‚€
-		MOV		[ECX],AL
+_io_cli:	; void io_cli(void);
+		CLI
+		RET
+
+_io_sti:	; void io_sti(void);
+		STI
+		RET
+
+_io_stihlt:	; void io_stihlt(void);
+		STI
+		HLT
+		RET
+
+_io_in8:	; int io_in8(int port);
+		MOV		EDX,[ESP+4]		; port
+		MOV		EAX,0
+		IN		AL,DX
+		RET
+
+_io_in16:	; int io_in16(int port);
+		MOV		EDX,[ESP+4]		; port
+		MOV		EAX,0
+		IN		AX,DX
+		RET
+
+_io_in32:	; int io_in32(int port);
+		MOV		EDX,[ESP+4]		; port
+		IN		EAX,DX
+		RET
+
+_io_out8:	; void io_out8(int port, int data);
+		MOV		EDX,[ESP+4]		; port
+		MOV		AL,[ESP+8]		; data
+		OUT		DX,AL
+		RET
+
+_io_out16:	; void io_out16(int port, int data);
+		MOV		EDX,[ESP+4]		; port
+		MOV		EAX,[ESP+8]		; data
+		OUT		DX,AX
+		RET
+
+_io_out32:	; void io_out32(int port, int data);
+		MOV		EDX,[ESP+4]		; port
+		MOV		EAX,[ESP+8]		; data
+		OUT		DX,EAX
+		RET
+
+_io_load_eflags:	; int io_load_eflags(void);
+		PUSHFD		; PUSH EFLAGS ‚Æ‚¢‚¤ˆÓ–¡
+		POP		EAX
+		RET
+
+_io_store_eflags:	; void io_store_eflags(int eflags);
+		MOV		EAX,[ESP+4]
+		PUSH	EAX
+		POPFD		; POP EFLAGS ‚Æ‚¢‚¤ˆÓ–¡
 		RET
